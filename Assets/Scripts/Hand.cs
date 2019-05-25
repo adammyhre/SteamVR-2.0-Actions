@@ -58,14 +58,64 @@ public class Hand : MonoBehaviour {
 
 	public void PickUp () {
 
+		// Get nearest
+		currentInteractable = GetNearestInteractable();
+
+		// Null check
+		if (!currentInteractable) return;
+			
+		// Already Held check
+		if (currentInteractable.activeHand)
+			currentInteractable.activeHand.Drop ();
+		
+		// Position to controller
+		currentInteractable.transform.position = transform.position;
+
+		// Attach rigid body to the joint
+		Rigidbody targetBody = currentInteractable.GetComponent<Rigidbody>();
+		joint.connectedBody = targetBody;
+
+		// Set Active Hand variable
+		currentInteractable.activeHand = this;
+
 	}
 
 	public void Drop () {
+		
+		// Mull check
+		if (!currentInteractable) return;
+
+		// Apply velocity
+		Rigidbody targetBody = currentInteractable.GetComponent<Rigidbody>();
+		targetBody.velocity = trackedObj.GetVelocity ();
+		targetBody.angularVelocity = trackedObj.GetAngularVelocity ();
+
+		// Detach from joint
+		joint.connectedBody = null;
+
+		// Clear variables
+		currentInteractable.activeHand = null;
+		currentInteractable = null;
+
 
 	}
 
 	private Interactable GetNearestInteractable () {
-		return null;
+
+		Interactable nearest = null;
+		float minDistance = float.MaxValue;
+		float distance = 0.0f;
+
+		foreach (Interactable interactable in contactInteractables) {
+			distance = (interactable.transform.position - transform.position).sqrMagnitude;
+
+			if (distance < minDistance) {
+				minDistance = distance;
+				nearest = interactable;
+			}
+		}
+
+		return nearest;
 	}
 
 }
