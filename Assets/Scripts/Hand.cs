@@ -7,7 +7,8 @@ using Valve.VR;
 
 public class Hand : MonoBehaviour {
 
-	public SteamVR_Action_Boolean grabAction = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabPinch");
+	public SteamVR_Action_Boolean triggerAction = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabPinch");
+	public SteamVR_Action_Boolean touchpadAction = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("Teleport");
 
 	private SteamVR_Behaviour_Pose trackedObj = null;
 	private FixedJoint joint = null;
@@ -25,17 +26,22 @@ public class Hand : MonoBehaviour {
 
 		// Pickup and Drop Object code
 		// Trigger Down
-		if (grabAction.GetStateDown(trackedObj.inputSource)) {
+		if (triggerAction.GetStateDown(trackedObj.inputSource)) {
 			#if DEBUG_Pickup
 			Debug.Log (trackedObj.inputSource + " trigger down.");
 			#endif
+
+			if (currentInteractable != null){
+				currentInteractable.Action ();
+				return;
+			}
 			PickUp();
 		}
 
-		// Trigger Up
-		if (grabAction.GetStateUp(trackedObj.inputSource)) {
+		// Touchpad Down
+		if (touchpadAction.GetStateDown(trackedObj.inputSource)) {
 			#if DEBUG_Pickup
-			Debug.Log (trackedObj.inputSource + " trigger up.");
+			Debug.Log (trackedObj.inputSource + " touchpad down.");
 			#endif
 			Drop();
 		}
@@ -69,7 +75,7 @@ public class Hand : MonoBehaviour {
 			currentInteractable.activeHand.Drop ();
 		
 		// Position to controller
-		currentInteractable.transform.position = transform.position;
+		currentInteractable.ApplyOffset(transform);
 
 		// Attach rigid body to the joint
 		Rigidbody targetBody = currentInteractable.GetComponent<Rigidbody>();
